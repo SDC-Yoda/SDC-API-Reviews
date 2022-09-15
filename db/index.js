@@ -161,73 +161,11 @@ client.query(`CREATE TABLE IF NOT EXISTS answer_photos (
   .then((response) => { console.log('created characteristics table') })
   .catch((err) => { console.log(err); });
 
-  client.query(`CREATE TABLE IF NOT EXISTS characteristics_review (
+  client.query(`CREATE TABLE IF NOT EXISTS characteristic_reviews (
     id SERIAL PRIMARY KEY,
     characteristic_id SERIAL REFERENCES characteristics (id),
-    name VARCHAR);`
+    review_id SERIAL REFERENCES reviews (id),
+    value VARCHAR);`
   )
-  .then((response) => { console.log('created characteristics_review table') })
+  .then((response) => { console.log('created characteristic_reviews table') })
   .catch((err) => { console.log(err); });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// client.end();
-// CREATE TABLE IF NOT EXISTS products (
-//   id SERIAL PRIMARY KEY,
-//   name VARCHAR,
-//   slogan VARCHAR,
-//   description VARCHAR,
-//   category VARCHAR,
-//   default_price VARCHAR
-// )
-// CREATE TABLE IF NOT EXISTS styles (
-//   id SERIAL PRIMARY KEY,
-//   product_id SERIAL REFERENCES products(id),
-//   name VARCHAR,
-//   sale_price TEXT,
-//   original_price VARCHAR,
-//   default_style BOOL
-// )
-// CREATE TABLE IF NOT EXISTS photos (
-//   id SERIAL PRIMARY KEY,
-//   styleId SERIAL REFERENCES styles(id),
-//   thumbnail_url TEXT,
-//   url TEXT
-// )
-// CREATE TABLE IF NOT EXISTS skus (
-//   id SERIAL PRIMARY KEY,
-//   styleId SERIAL REFERENCES styles(id),
-//   size VARCHAR,
-//   quantity SMALLINT
-// )
-// CREATE TABLE IF NOT EXISTS features (
-//   id SERIAL PRIMARY KEY,
-//   product_id SERIAL REFERENCES products(id),
-//   feature VARCHAR,
-//   value VARCHAR
-// )
-// CREATE TABLE IF NOT EXISTS related (
-//   id SERIAL PRIMARY KEY,
-//   current_product_id INT,
-//   related_product_id INT
-// )
-// client.query(`COPY products
-// FROM '/Users/tannerwhite/Desktop/product.csv'
-// DELIMITER ',' CSV HEADER;`)
-//   .then((response) => {
-//     console.log('copy response', response);
-//   })
-//   .catch((err) => {
-//     console.log(err);
-//   })
