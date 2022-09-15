@@ -7,7 +7,7 @@ const pool = new Pool ({
   database: 'practice',
   password: process.env.PGPASSWORD,
   port: process.env.PGPORT,
-})
+});
 
 pool.query('SELECT NOW()')
   .then(() => console.log('connected'))
@@ -169,3 +169,6 @@ client.query(`CREATE TABLE IF NOT EXISTS answer_photos (
   )
   .then((response) => { console.log('created characteristic_reviews table') })
   .catch((err) => { console.log(err); });
+
+  module.exports = client;
+
