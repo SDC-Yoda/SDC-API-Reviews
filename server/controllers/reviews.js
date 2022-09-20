@@ -40,7 +40,12 @@ module.exports = {
           }
         }
       })
+      .then(() => {
+        console.log('FINAL RESPONSE', finalResponse)
+        res.status(200).send(finalResponse)
+      })
       .catch(err => {
+        res.status(500).send('Internal Server Error')
         console.log('Error retrieving from DB:', err)
       })
   },
@@ -53,7 +58,8 @@ module.exports = {
       characteristics: {}
     }
 
-    const ratingsQuery =
+    const values = [finalResponse.product_id]
+    const getRatingsQuery =
       `SELECT
         json_build_object(rating, count(*)) AS ratings
       FROM
@@ -61,9 +67,9 @@ module.exports = {
       WHERE
         product_id = ($1)
       GROUP BY
-        rating`
+        rating;`
 
-    const recQuery = `
+    const getRecQuery = `
       SELECT
         json_build_object(recommend, count(*)) AS recommended
       FROM
@@ -71,10 +77,39 @@ module.exports = {
       WHERE
         product_id = ($1)
       GROUP BY
-        recommend`
-    const values = [finalResponse.product_id]
+        recommend;`
 
-    pool.query(ratingsQuery, values)
+    const getCharsQuery = `
+    SELECT json_build_object(
+      'Size', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Size' AND product_id = ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Size')
+      ),
+      'Width', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Width' AND product_id =  ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Width')
+      ),
+      'Fit', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Fit' AND product_id =  ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Fit')
+      ),
+      'Length', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Length' AND product_id = ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Length')
+      ),
+      'Comfort', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Comfort' AND product_id =  ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Comfort')
+      ),
+      'Quality', json_build_object(
+        'id', (SELECT id FROM characteristics WHERE name = 'Quality' AND product_id =  ($1)),
+        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Quality')
+      )
+    ) AS characteristics`
+
+
+    pool
+      .query(getRatingsQuery, values)
       .then(response => {
         for (var stars of response.rows) {
           for (var key in stars['ratings']) {
@@ -83,10 +118,9 @@ module.exports = {
         }
       })
       .then(() => {
-        return pool.query(recQuery, values)
+        return pool.query(getRecQuery, values)
       })
       .then(response => {
-        console.log(response.rows)
         for (var bool of response.rows) {
           for (var key in bool['recommended']) {
             if (key === 'true') {
@@ -98,9 +132,16 @@ module.exports = {
         }
       })
       .then(() => {
-        res.sendStatus(200)
+        return pool.query(getCharsQuery, values)
+      })
+      .then((response) => {
+        finalResponse.characteristics = response.rows[0]
+      })
+      .then(() => {
+        res.status(200).send(finalResponse)
       })
       .catch(err => {
+        res.status(500).send('Internal Server Error')
         console.log('Error retrieving from DB:', err)
       })
   },
@@ -149,7 +190,7 @@ module.exports = {
         pool
           .query(addPhotosQuery, addPhotoValues)
           .then((response) => {
-            console.log('addPhotosResponse:', response)
+            console.log('addPhotosResponse:', response.rows[0])
           })
       }
     }
@@ -166,7 +207,7 @@ module.exports = {
         pool
           .query(addCharsQuery, addCharsValues)
           .then((response) => {
-            console.log('AddCharsResponse:', response)
+            console.log('AddCharsResponse:', response.rows[0])
           })
       }
     }
@@ -174,9 +215,8 @@ module.exports = {
     pool
       .query(postQuery, postValues)
       .then(response => {
-        console.log('response:', response)
+        console.log('response from postQuery:', response.rows[0])
         review_id = response.rows[0].id
-        console.log('review_id:', review_id)
         populatePhotos()
         populateChars()
       })
@@ -184,67 +224,8 @@ module.exports = {
         res.sendStatus(201)
       })
       .catch(err => {
+        res.status(400).send('Bad Request')
         console.log('Error inserting into DB:', err)
       })
   }
 }
-
-
-
-
-// pageHelper: () => {
-//   return 5
-
-// }
-
-// sortHelper: () => {
-
-// }
-
-// getReviews: (req, res) => {
-//   let finalResponse = {
-//     product_id: req.query.product_id,
-//     page: req.query.page || pageHelper(),
-//     count: req.query.count || 5,
-//     results: undefined
-//   }
-
-//   const query =`
-//   SELECT
-//     reviews.id AS review_id, rating, summary, recommend, response, body, date, reviewer_name, helpfulness,
-//     json_agg(json_build_object('id', reviews_photos.id, 'url', reviews_photos.url)) AS photos
-//   FROM
-//     reviews
-//   LEFT JOIN
-//     reviews_photos
-//   ON
-//     reviews.id = reviews_photos.review_id
-//   WHERE
-//     reviews.product_id = ($4)
-//   GROUP BY
-//     reviews.id
-//   ORDER BY
-//     ($3)
-//   LIMIT
-//     ($2)
-//   OFFSET
-//     ($1);`
-//   const values = [finalResponse.page, finalResponse.count, req.query.sort, finalResponse.product_id]
-//   pool.query(query, values)
-//     .then(response => {
-//       finalResponse.results = response.rows
-//     })
-//     .then(() => {
-//       for (var currReview of finalResponse.results) {
-//         if (currReview.photos.length === 1) {
-//           if (currReview.photos[0].id === null) {
-//             currReview.photos = []
-//           }
-//         }
-//       }
-//       // console.log(finalResponse)
-//     })
-//     .catch(err => {
-//       console.log('Error retrieving from DB:', err)
-//     })
-// }
