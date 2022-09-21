@@ -41,7 +41,6 @@ module.exports = {
         }
       })
       .then(() => {
-        console.log('FINAL RESPONSE', finalResponse)
         res.status(200).send(finalResponse)
       })
       .catch(err => {
@@ -162,7 +161,7 @@ module.exports = {
       characteristics: {}
     }
 
-    const postQuery =
+    const postReviewQuery =
       `INSERT INTO
         reviews (product_id, rating, date, summary, body, recommend, reviewer_name, reviewer_email)
       VALUES
@@ -190,7 +189,7 @@ module.exports = {
         pool
           .query(addPhotosQuery, addPhotoValues)
           .then((response) => {
-            console.log('addPhotosResponse:', response.rows[0])
+            // console.log('addPhotosResponse:', response.rows[0])
           })
       }
     }
@@ -207,15 +206,15 @@ module.exports = {
         pool
           .query(addCharsQuery, addCharsValues)
           .then((response) => {
-            console.log('AddCharsResponse:', response.rows[0])
+            // console.log('AddCharsResponse:', response.rows[0])
           })
       }
     }
 
     pool
-      .query(postQuery, postValues)
+      .query(postReviewQuery, postValues)
       .then(response => {
-        console.log('response from postQuery:', response.rows[0])
+        // console.log('response from postQuery:', response.rows[0])
         review_id = response.rows[0].id
         populatePhotos()
         populateChars()
