@@ -8,8 +8,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/loaderio-956e4ceecb4e59cbe5174f246347115d.txt", (req, res) => {
-  return res.status(200).send("loaderio-956e4ceecb4e59cbe5174f246347115d")
+
+app.get("/loaderio-70abaf4c58ec8ad85d55460a8ca1a90a.txt", (req, res) => {
+  return res.status(200).send("loaderio-70abaf4c58ec8ad85d55460a8ca1a90a")
 })
 
 app.get('/reviews', (req, res) => {
