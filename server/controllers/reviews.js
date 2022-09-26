@@ -50,98 +50,57 @@ module.exports = {
   },
 
   getReviewsMeta: (req, res) => {
-    let finalResponse = {
-      product_id: req.query.product_id,
-      ratings: {},
-      recommended: {},
-      characteristics: {}
-    }
-
-    const values = [finalResponse.product_id]
-    const getRatingsQuery =
-      `SELECT
-        json_build_object(rating, count(*)) AS ratings
-      FROM
-        reviews
-      WHERE
-        product_id = ($1)
-      GROUP BY
-        rating;`
-
-    const getRecQuery = `
-      SELECT
-        json_build_object(recommend, count(*)) AS recommended
-      FROM
-        reviews
-      WHERE
-        product_id = ($1)
-      GROUP BY
-        recommend;`
-
-    const getCharsQuery = `
-    SELECT json_build_object(
-      'Size', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Size' AND product_id = ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Size')
-      ),
-      'Width', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Width' AND product_id =  ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Width')
-      ),
-      'Fit', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Fit' AND product_id =  ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Fit')
-      ),
-      'Length', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Length' AND product_id = ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Length')
-      ),
-      'Comfort', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Comfort' AND product_id =  ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Comfort')
-      ),
-      'Quality', json_build_object(
-        'id', (SELECT id FROM characteristics WHERE name = 'Quality' AND product_id =  ($1)),
-        'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.characteristic_id = characteristics.id WHERE product_id = ($1) AND name = 'Quality')
+    const values = [req.product_id]
+    const getReveiewsMeta =
+    `SELECT json_build_object(
+      'product_id', ($1),
+      'ratings', json_build_object(
+        '1', (SELECT COUNT(*) FROM reviews WHERE rating = 1 AND product_id = ($1)),
+        '2', (SELECT COUNT(*) FROM reviews WHERE rating = 2 AND product_id = ($1)),
+        '3', (SELECT COUNT(*) FROM reviews WHERE rating = 3 AND product_id = ($1)),
+        '4', (SELECT COUNT(*) FROM reviews WHERE rating = 4 AND product_id = ($1)),
+        '5', (SELECT COUNT(*) FROM reviews WHERE rating = 5 AND product_id = ($1))
+          ),
+      'recommended', json_build_object(
+        '0', (SELECT COUNT(*) FROM reviews WHERE recommend = false AND product_id = ($1)),
+        '1', (SELECT COUNT(*) FROM reviews WHERE recommend = true AND product_id = ($1))
+        ),
+      'characteristics', json_build_object(
+        'Size', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Size' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Size')
+          ),
+        'Width', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Width' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Width')
+          ),
+        'Fit', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Fit' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Fit')
+          ),
+        'Length', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Length' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Length')
+          ),
+        'Comfort', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Comfort' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Comfort')
+          ),
+        'Quality', json_build_object(
+          'id', (SELECT id FROM characteristics WHERE name = 'Quality' AND product_id = ($1)),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Quality')
+        )
       )
-    ) AS characteristics`
-
+    )`
 
     pool
-      .query(getRatingsQuery, values)
-      .then(response => {
-        for (var stars of response.rows) {
-          for (var key in stars['ratings']) {
-            finalResponse.ratings[key] = stars['ratings'][key]
-          }
-        }
-      })
+      .query(getReveiewsMeta, values)
       .then(() => {
-        return pool.query(getRecQuery, values)
-      })
-      .then(response => {
-        for (var bool of response.rows) {
-          for (var key in bool['recommended']) {
-            if (key === 'true') {
-              finalResponse.recommended[1] = bool['recommended'][key]
-            } else {
-              finalResponse.recommended[0] = bool['recommended'][key]
-            }
-          }
-        }
-      })
-      .then(() => {
-        return pool.query(getCharsQuery, values)
-      })
-      .then((response) => {
-        finalResponse.characteristics = response.rows[0]
-      })
-      .then(() => {
-        res.status(200).send(finalResponse)
+        res.sendStatus(200)
       })
       .catch(err => {
-        res.status(500).send('Internal Server Error')
-        console.log('Error retrieving from DB:', err)
+        res.status(500).send('Error retrieving meta from DB')
+        console.log('Error retrieving meta from DB:', err)
       })
   },
 
@@ -189,7 +148,6 @@ module.exports = {
         pool
           .query(addPhotosQuery, addPhotoValues)
           .then((response) => {
-            // console.log('addPhotosResponse:', response.rows[0])
           })
       }
     }
@@ -206,25 +164,23 @@ module.exports = {
         pool
           .query(addCharsQuery, addCharsValues)
           .then((response) => {
-            // console.log('AddCharsResponse:', response.rows[0])
           })
       }
     }
 
     pool
-      .query(postReviewQuery, postValues)
-      .then(response => {
-        // console.log('response from postQuery:', response.rows[0])
-        review_id = response.rows[0].id
-        populatePhotos()
-        populateChars()
+        .query(postReviewQuery, postValues)
+        .then(response => {
+          review_id = response.rows[0].id
+          populatePhotos()
+          populateChars()
       })
       .then(() => {
         res.sendStatus(201)
       })
       .catch(err => {
-        res.status(400).send('Bad Request')
         console.log('Error inserting into DB:', err)
+        res.status(400).send('Bad Request')
       })
   }
 }
