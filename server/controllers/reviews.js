@@ -50,7 +50,6 @@ module.exports = {
   },
 
   getReviewsMeta: (req, res) => {
-    console.log('req.query.product_id:', req.query.product_id)
     const values = [req.query.product_id]
     const getReveiewsMeta =
     `SELECT json_build_object(
