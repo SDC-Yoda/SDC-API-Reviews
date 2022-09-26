@@ -50,52 +50,54 @@ module.exports = {
   },
 
   getReviewsMeta: (req, res) => {
-    const values = [req.product_id]
+    console.log('req.query.product_id:', req.query.product_id)
+    const values = [req.query.product_id]
     const getReveiewsMeta =
     `SELECT json_build_object(
-      'product_id', ($1),
+      'product_id', $1::integer,
       'ratings', json_build_object(
-        '1', (SELECT COUNT(*) FROM reviews WHERE rating = 1 AND product_id = ($1)),
-        '2', (SELECT COUNT(*) FROM reviews WHERE rating = 2 AND product_id = ($1)),
-        '3', (SELECT COUNT(*) FROM reviews WHERE rating = 3 AND product_id = ($1)),
-        '4', (SELECT COUNT(*) FROM reviews WHERE rating = 4 AND product_id = ($1)),
-        '5', (SELECT COUNT(*) FROM reviews WHERE rating = 5 AND product_id = ($1))
+        '1', (SELECT COUNT(*) FROM reviews WHERE rating = 1 AND product_id = $1::integer),
+        '2', (SELECT COUNT(*) FROM reviews WHERE rating = 2 AND product_id = $1::integer),
+        '3', (SELECT COUNT(*) FROM reviews WHERE rating = 3 AND product_id = $1::integer),
+        '4', (SELECT COUNT(*) FROM reviews WHERE rating = 4 AND product_id = $1::integer),
+        '5', (SELECT COUNT(*) FROM reviews WHERE rating = 5 AND product_id = $1::integer)
           ),
       'recommended', json_build_object(
-        '0', (SELECT COUNT(*) FROM reviews WHERE recommend = false AND product_id = ($1)),
-        '1', (SELECT COUNT(*) FROM reviews WHERE recommend = true AND product_id = ($1))
+        '0', (SELECT COUNT(*) FROM reviews WHERE recommend = false AND product_id = $1::integer),
+        '1', (SELECT COUNT(*) FROM reviews WHERE recommend = true AND product_id = $1::integer)
         ),
       'characteristics', json_build_object(
         'Size', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Size' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Size')
+          'id', (SELECT id FROM characteristics WHERE name = 'Size' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Size')
           ),
         'Width', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Width' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Width')
+          'id', (SELECT id FROM characteristics WHERE name = 'Width' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Width')
           ),
         'Fit', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Fit' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Fit')
+          'id', (SELECT id FROM characteristics WHERE name = 'Fit' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Fit')
           ),
         'Length', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Length' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Length')
+          'id', (SELECT id FROM characteristics WHERE name = 'Length' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Length')
           ),
         'Comfort', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Comfort' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Comfort')
+          'id', (SELECT id FROM characteristics WHERE name = 'Comfort' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Comfort')
           ),
         'Quality', json_build_object(
-          'id', (SELECT id FROM characteristics WHERE name = 'Quality' AND product_id = ($1)),
-          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = ($1) AND name = 'Quality')
+          'id', (SELECT id FROM characteristics WHERE name = 'Quality' AND product_id = $1::integer),
+          'value', (SELECT AVG(value)::numeric(10,2) FROM characteristic_reviews JOIN characteristics ON characteristic_reviews.id = characteristics.id WHERE product_id = $1::integer AND name = 'Quality')
         )
       )
-    )`
+    ) AS characteristics`
 
     pool
       .query(getReveiewsMeta, values)
-      .then(() => {
+      .then((response) => {
+        console.log('response:', response.rows)
         res.sendStatus(200)
       })
       .catch(err => {
