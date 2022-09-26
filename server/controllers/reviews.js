@@ -97,7 +97,6 @@ module.exports = {
     pool
       .query(getReveiewsMeta, values)
       .then((response) => {
-        console.log('response:', response.rows)
         res.sendStatus(200)
       })
       .catch(err => {
