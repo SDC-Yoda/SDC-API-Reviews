@@ -27,6 +27,7 @@ In addition to indexing, I also modified the queries to be more efficient by wri
 <p align="center"><img width="750" src="https://user-images.githubusercontent.com/104800030/217942842-094e6871-4f19-4b3d-bba9-80dca1636a95.png" alt="getReviewMeta pre-indexing" alt="Querying review metadata post-indexing"/></p>
 
 ### Results
+After implementing the database and server-side performance optimization techniques, I logged the following metrics:
 #### Response Times Pre Load-Balancing
 | Route 	| Throughput (RPS over 30 secs) 	| Latency (Avg. response time) 	| Error Rate 	|
 |---	|---	|---	|---	|
