@@ -3,7 +3,7 @@
 This project entailed optimizing the back-end infrastructure of the e-commerce website, AMAZAM, in order to handle the increased web traffic that could no longer be supported by their previous architecture. This was for the ratings and reviews section of the AMAZAM page.
 
 ### 📈 Server Optimization
-I re-designing the architecture from the single server model to the following:
+I re-designed the architecture from the single server model to the following:
 - one Nginx load balancer server
 - three web-servers
 - one dedicated database server
